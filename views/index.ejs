@@ -1,0 +1,49 @@
+<head>
+    <%- include('partials/head') %>
+    
+</head>
+
+
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <div class="jumbotron">
+        <h1 class="display-4">Welcome to BOUTIQUE</h1>
+        <p class="lead">Discover amazing products at great prices.</p>
+        <hr class="my-4">
+        <a class="btn btn-primary btn-lg" href="/products" role="button">Shop Now</a>
+    </div>
+
+    <div class="row mt-5">
+        <h2>Featured Categories</h2>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Gift Boxes</h5>
+                    <p class="card-text">Explore our collection of beautiful gift boxes.</p>
+                    <a href="/products?category=Gift Boxes" class="btn btn-primary">View Products</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Books</h5>
+                    <p class="card-text">Browse through our extensive book collection.</p>
+                    <a href="/products?category=Books" class="btn btn-primary">View Products</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Stationery</h5>
+                    <p class="card-text">Find high-quality stationery items.</p>
+                    <a href="/products?category=Stationery" class="btn btn-primary">View Products</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('partials/footer') %>

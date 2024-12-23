@@ -1,0 +1,151 @@
+/* General Styles */
+:root {
+    --primary-color: #333333;
+    --secondary-color: #666666;
+    --accent-color: #c4a67e;
+    --background-color: #ffffff;
+    --light-gray: #f8f8f8;
+}
+
+body {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    line-height: 1.6;
+    color: var(--primary-color);
+    background-color: var(--background-color);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+}
+
+/* Navbar Styles */
+.navbar {
+    background-color: var(--background-color) !important;
+    box-shadow: none;
+    border-bottom: 1px solid #eee;
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    color: var(--primary-color) !important;
+    letter-spacing: 2px;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: var(--primary-color) !important;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+}
+
+/* Card Styles */
+.card {
+    border: none;
+    border-radius: 0;
+    transition: transform 0.3s ease;
+    background-color: var(--background-color);
+    margin-bottom: 2rem;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-img-top {
+    border-radius: 0;
+    height: 300px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 1.5rem 0;
+    text-align: center;
+}
+
+.card-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.card-text {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+}
+
+/* Button Styles */
+.btn-primary {
+    background-color: var(--primary-color);
+    border: none;
+    border-radius: 0;
+    padding: 0.8rem 2rem;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+/* Container Spacing */
+.container {
+    padding: 2rem 1rem;
+}
+
+/* Product Grid */
+.row {
+    margin: 2rem -1rem;
+}
+
+/* Price Styling */
+.price {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--accent-color);
+    font-size: 1.1rem;
+    margin: 0.5rem 0;
+}
+
+/* Stock Status */
+.stock-status {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .card-img-top {
+        height: 200px;
+    }
+    
+    .container {
+        padding: 1rem;
+    }
+}
+
+/* Toast Notifications */
+.toast {
+    border-radius: 0;
+    background-color: var(--background-color);
+    border: 1px solid #eee;
+}
+
+/* Cart Badge */
+.badge {
+    background-color: var(--accent-color) !important;
+    border-radius: 50%;
+    padding: 0.25rem 0.5rem;
+}

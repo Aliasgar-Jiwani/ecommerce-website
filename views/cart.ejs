@@ -1,0 +1,325 @@
+
+<head>
+    <%- include('partials/head') %>
+
+</head>
+
+    
+<%- include('partials/header') %>
+
+<div class="container mt-5">
+    <h1>Shopping Cart</h1>
+    <div id="cart-items" class="row mt-4">
+        <!-- Cart items will be loaded here -->
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Apply Coupon</h5>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="couponCode" placeholder="Enter coupon code">
+                        <button class="btn btn-outline-secondary" type="button" onclick="applyCoupon()">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Order Summary</h5>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Discount:</span>
+                        <span id="discount">-₹0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <strong>Total:</strong>
+                        <strong id="total">₹0.00</strong>
+                    </div>
+                    <button class="btn btn-primary w-100 mt-3" onclick="checkout()">Proceed to Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cart-item-image {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+}
+
+.quantity-input {
+    width: 60px;
+    text-align: center;
+}
+
+.cart-empty {
+    text-align: center;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+.cart-empty i {
+    font-size: 3rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+</style>
+
+<script>
+// Function to update cart count display
+function updateCartCountDisplay(count) {
+    const cartCountElements = document.querySelectorAll('.cart-count');
+    cartCountElements.forEach(element => {
+        element.textContent = count || '0';
+    });
+}
+
+// Function to update cart count
+async function updateCartCount() {
+    try {
+        const response = await fetch('/cart/count', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch cart count');
+        }
+
+        const data = await response.json();
+        console.log('Cart count response:', data);
+        
+        if (data.success) {
+            updateCartCountDisplay(data.count);
+        }
+    } catch (error) {
+        console.error('Error updating cart count:', error);
+    }
+}
+
+async function loadCart() {
+    try {
+        const response = await fetch('/cart/get-cart', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load cart');
+        }
+
+        const data = await response.json();
+        console.log('Cart data:', data);
+
+        if (data.success) {
+            displayCart(data.cart);
+            // Update cart count - check both locations
+            const count = data.count || (data.cart && data.cart.count) || 0;
+            console.log('Updating cart count to:', count);
+            updateCartCountDisplay(count);
+        } else {
+            throw new Error(data.message || 'Failed to load cart');
+        }
+    } catch (error) {
+        console.error('Error loading cart:', error);
+        document.getElementById('cart-items').innerHTML = `
+            <div class="col-12 text-center">
+                <p class="text-danger">Error loading cart: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+function showEmptyCart() {
+    const cartContainer = document.getElementById('cart-items');
+    cartContainer.innerHTML = `
+        <div class="col-12">
+            <div class="cart-empty">
+                <i class="bi bi-cart-x"></i>
+                <h3>Your cart is empty</h3>
+                <p>Looks like you haven't added any items to your cart yet.</p>
+                <a href="/products" class="btn btn-primary">Continue Shopping</a>
+            </div>
+        </div>
+    `;
+    updateOrderSummary({ items: [] });
+    updateCartCountDisplay(0);
+}
+
+function displayCart(cart) {
+    const cartContainer = document.getElementById('cart-items');
+    cartContainer.innerHTML = '';
+    
+    if (!cart.items || cart.items.length === 0) {
+        showEmptyCart();
+        return;
+    }
+
+    // Calculate total quantity for cart count
+    const totalQuantity = cart.items.reduce((total, item) => total + item.quantity, 0);
+    updateCartCountDisplay(totalQuantity);
+    
+    cart.items.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.className = 'col-12 mb-3';
+        itemElement.innerHTML = `
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-2">
+                            <img src="/images/${item.product.image}" 
+                                 class="cart-item-image" 
+                                 alt="${item.product.name}"
+                                 onerror="this.src='/images/placeholder.jpg'">
+                        </div>
+                        <div class="col-md-4">
+                            <h5 class="card-title">${item.product.name}</h5>
+                            <p class="card-text">${item.product.description || ''}</p>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="input-group">
+                                <button class="btn btn-outline-secondary" 
+                                        onclick="updateQuantity('${item.product._id}', ${item.quantity - 1})"
+                                        ${item.quantity <= 1 ? 'disabled' : ''}>
+                                    <i class="bi bi-dash"></i>
+                                </button>
+                                <input type="number" 
+                                       class="form-control quantity-input" 
+                                       value="${item.quantity}" 
+                                       min="1"
+                                       onchange="updateQuantity('${item.product._id}', this.value)">
+                                <button class="btn btn-outline-secondary" 
+                                        onclick="updateQuantity('${item.product._id}', ${item.quantity + 1})">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <p class="mb-0">₹${((item.product.price * 83) * item.quantity).toLocaleString('en-IN')}</p>
+                        </div>
+                        <div class="col-md-2 text-end">
+                            <button class="btn btn-danger btn-sm" onclick="removeFromCart('${item.product._id}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        cartContainer.appendChild(itemElement);
+    });
+
+    // Update order summary
+    updateOrderSummary(cart);
+}
+
+function updateOrderSummary(cart) {
+    const subtotal = cart.items ? cart.items.reduce((total, item) => total + ((item.product.price * 83) * item.quantity), 0) : 0;
+    const discount = 0; // Implement discount logic here
+    const total = subtotal - discount;
+
+    document.getElementById('subtotal').textContent = `₹${subtotal.toLocaleString('en-IN')}`;
+    document.getElementById('discount').textContent = `-₹${discount.toLocaleString('en-IN')}`;
+    document.getElementById('total').textContent = `₹${total.toLocaleString('en-IN')}`;
+}
+
+async function updateQuantity(productId, newQuantity) {
+    try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) return;
+
+        newQuantity = parseInt(newQuantity);
+        if (newQuantity < 1) return;
+
+        const response = await fetch('/cart/update-quantity', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: user.userId,
+                productId: productId,
+                quantity: newQuantity
+            }),
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            loadCart(); // Reload cart to show updated quantities
+        } else {
+            const data = await response.json();
+            alert(data.message || 'Error updating quantity');
+        }
+    } catch (error) {
+        console.error('Error updating quantity:', error);
+        alert('Error updating quantity');
+    }
+}
+
+async function removeFromCart(productId) {
+    try {
+        const response = await fetch('/cart/remove-item', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ productId }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to remove item');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            await loadCart(); // Reload cart after removing item
+            await updateCartCount(); // Update cart count after removing item
+            showToast('Item removed from cart', 'success');
+        } else {
+            throw new Error(data.message || 'Failed to remove item');
+        }
+    } catch (error) {
+        console.error('Error removing item:', error);
+        showToast(error.message || 'Error removing item', 'danger');
+    }
+}
+
+async function applyCoupon() {
+    const couponCode = document.getElementById('couponCode').value;
+    // Implement coupon logic here
+    alert('Coupon functionality coming soon!');
+}
+
+async function checkout() {
+    // Implement checkout logic here
+    alert('Checkout functionality coming soon!');
+}
+
+// Initialize cart and count on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('Loading cart...');
+    await loadCart();
+});
+
+// Update cart count periodically
+setInterval(updateCartCount, 30000); // Every 30 seconds
+</script>
+
+<%- include('partials/footer') %>

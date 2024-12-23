@@ -1,0 +1,163 @@
+<head>
+    <%- include('partials/head') %>
+
+</head>
+
+
+<%- include('partials/header') %>
+
+<div class="container">
+    <h1 class="text-center mb-5">Our Collection</h1>
+    <div class="row">
+        <% products.forEach(function(product) { %>
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-img-top-wrapper">
+                        <img src="<%= product.image ? `/images/${product.image}` : '/images/placeholder.jpg' %>" 
+                             class="card-img-top" 
+                             alt="<%= product.name %>"
+                             onerror="this.onerror=null; this.src='/images/placeholder.jpg';">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title"><%= product.name %></h5>
+                        <p class="card-text"><%= product.description %></p>
+                        <p class="price">₹<%= (product.price * 83).toLocaleString('en-IN') %></p>
+                        <% if (product.stock > 0) { %>
+                            <p class="stock-status text-success">In Stock</p>
+                            <button onclick="addToCart('<%= product._id %>')" 
+                                    class="btn btn-primary">
+                                Add to Cart
+                            </button>
+                        <% } else { %>
+                            <p class="stock-status text-muted">Out of Stock</p>
+                            <button class="btn btn-primary" disabled>
+                                Out of Stock
+                            </button>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        <% }); %>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+<style>
+.card-img-top-wrapper {
+    overflow: hidden;
+    background-color: var(--light-gray);
+}
+
+.card-img-top {
+    transition: transform 0.6s ease;
+}
+
+.card:hover .card-img-top {
+    transform: scale(1.1);
+}
+</style>
+
+<script>
+// Function to show toast notifications
+function showToast(message, type = 'info') {
+    const toastContainer = document.querySelector('.toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="toast-header bg-${type} text-white">
+            <strong class="me-auto">${type.charAt(0).toUpperCase() + type.slice(1)}</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+        </div>
+        <div class="toast-body">${message}</div>
+    `;
+    toastContainer.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
+
+// Function to check auth status
+async function checkAuth() {
+    try {
+        const response = await fetch('/auth/check-auth', {
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Auth check failed');
+        }
+
+        const data = await response.json();
+        if (!data.success || !data.user) {
+            localStorage.removeItem('user');
+            return false;
+        }
+
+        localStorage.setItem('user', JSON.stringify(data.user));
+        return true;
+    } catch (error) {
+        console.error('Auth check error:', error);
+        localStorage.removeItem('user');
+        return false;
+    }
+}
+
+// Function to add product to cart
+async function addToCart(productId) {
+    try {
+        // Check auth status first
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+            showToast('Please login to add items to cart', 'warning');
+            setTimeout(() => {
+                window.location.href = '/auth/login';
+            }, 2000);
+            return;
+        }
+
+        const response = await fetch('/cart/addtocart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                productId,
+                quantity: 1
+            }),
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to add item to cart');
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Update cart count
+            const cartCountElement = document.getElementById('cartCount');
+            if (cartCountElement) {
+                cartCountElement.textContent = result.count || '0';
+            }
+
+            // Show success message
+            showToast('Item added to cart successfully!', 'success');
+        } else {
+            throw new Error(result.message || 'Failed to add item to cart');
+        }
+    } catch (error) {
+        console.error('Error adding to cart:', error);
+        showToast(error.message || 'Failed to add item to cart', 'error');
+    }
+}
+
+// Check auth and update cart count on page load
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+});
+</script>
+
+<%- include('partials/footer') %>
