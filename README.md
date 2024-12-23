@@ -11,6 +11,6 @@
 
 
 ### Screenshot 3
-![Shopping Cart](website%20image3.png)
+![Shopping Cart](./website%20image%203.png)
 
 
